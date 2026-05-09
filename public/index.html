@@ -4,27 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidChat</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="theme-dark">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand-card panel">
+                <p class="eyebrow">VoidChat</p>
+                <h1>Личные диалоги по ID</h1>
+                <p class="muted">Аккаунт создается автоматически, IP записывается в журнал, а переписка хранится на сервере.</p>
+            </div>
 
-<div class="chat">
+            <div class="panel account-card">
+                <p class="eyebrow">Аккаунт</p>
+                <div class="profile-name" id="profileName">Загрузка...</div>
+                <div class="profile-row">
+                    <span>ID</span>
+                    <code id="profileId">-</code>
+                </div>
+                <div class="profile-row">
+                    <span>IP</span>
+                    <code id="profileIp">-</code>
+                </div>
+                <p class="helper-text" id="sessionHint">Подключение...</p>
+            </div>
 
-    <div id="messages"></div>
+            <form class="panel search-card" id="searchForm">
+                <label class="eyebrow" for="searchInput">Начать переписку</label>
+                <input id="searchInput" autocomplete="off" placeholder="Введите ID пользователя">
+                <button type="submit">Открыть диалог</button>
+                <p class="helper-text" id="searchStatus">Например: `VC-1A2B3C`</p>
+            </form>
 
-    <div class="bottom">
-        <input id="input" placeholder="Напиши сообщение...">
+            <div class="panel conversations-card">
+                <div class="section-head">
+                    <p class="eyebrow">Диалоги</p>
+                    <button class="ghost-button" id="settingsButton" type="button">Настройки</button>
+                </div>
+                <div class="conversation-list" id="conversationList"></div>
+            </div>
+        </aside>
 
-        <button onclick="sendMessage()">
-            Отправить
-        </button>
+        <main class="chat-panel panel">
+            <div class="chat-empty" id="chatEmpty">
+                <p class="eyebrow">Пусто</p>
+                <h2>Открой диалог по ID, чтобы начать переписку.</h2>
+                <p class="muted">После перезагрузки история останется, потому что сообщения сохраняются на сервере.</p>
+            </div>
+
+            <section class="chat-section" id="chatSection" hidden>
+                <header class="chat-header">
+                    <div>
+                        <p class="eyebrow">Диалог</p>
+                        <h2 id="chatTitle">-</h2>
+                        <p class="muted" id="chatSubtitle">-</p>
+                    </div>
+                </header>
+
+                <div class="message-list" id="messageList"></div>
+
+                <form class="composer" id="messageForm">
+                    <textarea id="messageInput" rows="1" placeholder="Напиши сообщение..."></textarea>
+                    <button type="submit">Отправить</button>
+                </form>
+            </section>
+        </main>
     </div>
 
-</div>
+    <div class="modal-backdrop hidden" id="settingsModal">
+        <div class="modal panel">
+            <div class="modal-head">
+                <div>
+                    <p class="eyebrow">Настройки</p>
+                    <h2>Профиль и стиль</h2>
+                </div>
+                <button class="ghost-button" id="closeSettingsButton" type="button">Закрыть</button>
+            </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="app.js"></script>
+            <form class="settings-form" id="settingsForm">
+                <label for="displayNameInput">Имя</label>
+                <input id="displayNameInput" maxlength="32" placeholder="Твое имя">
 
+                <label for="themeSelect">Тема</label>
+                <select id="themeSelect">
+                    <option value="dark">Темная</option>
+                    <option value="light">Светлая</option>
+                </select>
+
+                <button type="submit">Сохранить</button>
+                <p class="helper-text" id="settingsStatus">Изменения применятся сразу.</p>
+            </form>
+
+            <div class="log-block">
+                <p class="eyebrow">Журнал</p>
+                <div class="activity-log" id="activityLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
