@@ -11,12 +11,12 @@
         <aside class="sidebar">
             <div class="brand-card panel">
                 <p class="eyebrow">VoidChat</p>
-                <h1>Личные диалоги по ID</h1>
-                <p class="muted">Аккаунт создается автоматически, IP записывается в журнал, а переписка хранится на сервере.</p>
+                <h1>Чат</h1>
+                <p class="muted">Личные сообщения по ID.</p>
             </div>
 
             <div class="panel account-card">
-                <p class="eyebrow">Аккаунт</p>
+                <p class="eyebrow">Профиль</p>
                 <div class="profile-name" id="profileName">Загрузка...</div>
                 <div class="profile-row">
                     <span>ID</span>
@@ -30,16 +30,16 @@
             </div>
 
             <form class="panel search-card" id="searchForm">
-                <label class="eyebrow" for="searchInput">Начать переписку</label>
-                <input id="searchInput" autocomplete="off" placeholder="Введите ID пользователя">
-                <button type="submit">Открыть диалог</button>
-                <p class="helper-text" id="searchStatus">Например: `VC-1A2B3C`</p>
+                <label class="eyebrow" for="searchInput">Найти по ID</label>
+                <input id="searchInput" autocomplete="off" placeholder="Например VC-1A2B3C">
+                <button type="submit">Открыть чат</button>
+                <p class="helper-text" id="searchStatus">Введи ID пользователя.</p>
             </form>
 
             <div class="panel conversations-card">
                 <div class="section-head">
-                    <p class="eyebrow">Диалоги</p>
-                    <button class="ghost-button" id="settingsButton" type="button">Настройки</button>
+                    <p class="eyebrow">Чаты</p>
+                    <button class="ghost-button" id="settingsButton" type="button">Профиль</button>
                 </div>
                 <div class="conversation-list" id="conversationList"></div>
             </div>
@@ -47,15 +47,15 @@
 
         <main class="chat-panel panel">
             <div class="chat-empty" id="chatEmpty">
-                <p class="eyebrow">Пусто</p>
-                <h2>Открой диалог по ID, чтобы начать переписку.</h2>
-                <p class="muted">После перезагрузки история останется, потому что сообщения сохраняются на сервере.</p>
+                <p class="eyebrow">Чат</p>
+                <h2>Выбери диалог слева.</h2>
+                <p class="muted">Или найди пользователя по ID.</p>
             </div>
 
             <section class="chat-section" id="chatSection" hidden>
                 <header class="chat-header">
                     <div>
-                        <p class="eyebrow">Диалог</p>
+                        <p class="eyebrow">Переписка</p>
                         <h2 id="chatTitle">-</h2>
                         <p class="muted" id="chatSubtitle">-</p>
                     </div>
@@ -76,7 +76,7 @@
             <div class="modal-head">
                 <div>
                     <p class="eyebrow">Настройки</p>
-                    <h2>Профиль и стиль</h2>
+                    <h2>Профиль</h2>
                 </div>
                 <button class="ghost-button" id="closeSettingsButton" type="button">Закрыть</button>
             </div>
@@ -92,7 +92,7 @@
                 </select>
 
                 <button type="submit">Сохранить</button>
-                <p class="helper-text" id="settingsStatus">Изменения применятся сразу.</p>
+                <p class="helper-text" id="settingsStatus">Можно изменить имя и тему.</p>
             </form>
 
             <div class="log-block">

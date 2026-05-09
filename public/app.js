@@ -77,14 +77,14 @@ function formatTime(value) {
 
 function getRecoveryMessage(mode) {
     if (mode === "token") {
-        return "Аккаунт восстановлен по сохраненной сессии.";
+        return "Сессия восстановлена.";
     }
 
     if (mode === "ip") {
-        return "Аккаунт найден по IP и сессия восстановлена.";
+        return "Вход выполнен по IP.";
     }
 
-    return "Создан новый аккаунт. Сохрани свой ID для новых диалогов.";
+    return "Новый аккаунт создан.";
 }
 
 function renderProfile() {
@@ -108,7 +108,7 @@ function renderConversationList() {
     if (!state.conversations.length) {
         const empty = document.createElement("p");
         empty.className = "helper-text";
-        empty.textContent = "Пока нет диалогов. Введи ID пользователя выше.";
+        empty.textContent = "Пока нет чатов.";
         conversationList.appendChild(empty);
         return;
     }
@@ -122,7 +122,7 @@ function renderConversationList() {
         button.innerHTML = `
             <strong>${escapeHtml(conversation.otherUser?.displayName || "Неизвестно")}</strong>
             <span>${escapeHtml(conversation.otherUser?.publicId || "-")}</span>
-            <small>${escapeHtml(conversation.lastMessagePreview || "Диалог создан, сообщений пока нет.")}</small>
+            <small>${escapeHtml(conversation.lastMessagePreview || "Сообщений пока нет.")}</small>
         `;
 
         button.addEventListener("click", () => openConversation(conversation.id));
@@ -142,14 +142,14 @@ function renderMessages() {
 
     chatEmpty.hidden = true;
     chatSection.hidden = false;
-    chatTitle.textContent = conversation.otherUser?.displayName || "Диалог";
-    chatSubtitle.textContent = `${conversation.otherUser?.publicId || "-"} • История сохраняется`;
+    chatTitle.textContent = conversation.otherUser?.displayName || "Чат";
+    chatSubtitle.textContent = conversation.otherUser?.publicId || "-";
     messageList.innerHTML = "";
 
     if (!conversation.messages.length) {
         const emptyMessage = document.createElement("div");
         emptyMessage.className = "message-hint";
-        emptyMessage.textContent = "Сообщений еще нет. Напиши первым.";
+        emptyMessage.textContent = "Сообщений пока нет.";
         messageList.appendChild(emptyMessage);
     } else {
         conversation.messages.forEach((message) => {
@@ -176,7 +176,7 @@ function renderLogs() {
     if (!state.logs.length) {
         const empty = document.createElement("p");
         empty.className = "helper-text";
-        empty.textContent = "Журнал пока пуст.";
+        empty.textContent = "Записей пока нет.";
         activityLog.appendChild(empty);
         return;
     }
@@ -198,23 +198,23 @@ function describeLogEntry(entry) {
     }
 
     if (entry.type === "session.created") {
-        return "Открыта новая сессия";
+        return "Новый вход";
     }
 
     if (entry.type === "session.restored_by_ip") {
-        return "Вход восстановлен по IP";
+        return "Вход по IP";
     }
 
     if (entry.type === "conversation.created") {
-        return "Создан новый диалог";
+        return "Создан чат";
     }
 
     if (entry.type === "message.saved") {
-        return "Сообщение сохранено";
+        return "Отправлено сообщение";
     }
 
     if (entry.type === "profile.updated") {
-        return "Настройки профиля обновлены";
+        return "Обновлен профиль";
     }
 
     return entry.type;
@@ -298,7 +298,7 @@ function connectSocket() {
 
 searchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    searchStatus.textContent = "Ищу пользователя...";
+    searchStatus.textContent = "Поиск...";
 
     try {
         const payload = await apiRequest("/api/conversations/start", {
@@ -310,7 +310,7 @@ searchForm.addEventListener("submit", async (event) => {
 
         state.conversations = payload.conversations;
         searchInput.value = "";
-        searchStatus.textContent = payload.created ? "Диалог создан." : "Диалог открыт.";
+        searchStatus.textContent = payload.created ? "Чат создан." : "Чат открыт.";
         renderConversationList();
         await openConversation(payload.conversation.id);
         await refreshLogs();
@@ -368,7 +368,7 @@ settingsModal.addEventListener("click", (event) => {
 
 settingsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    settingsStatus.textContent = "Сохраняю...";
+    settingsStatus.textContent = "Сохранение...";
 
     try {
         const payload = await apiRequest("/api/me", {
@@ -381,7 +381,7 @@ settingsForm.addEventListener("submit", async (event) => {
 
         state.user = payload.user;
         state.logs = payload.logs;
-        settingsStatus.textContent = "Настройки сохранены.";
+        settingsStatus.textContent = "Сохранено.";
         renderProfile();
         renderLogs();
         await refreshConversations();
@@ -396,5 +396,5 @@ settingsForm.addEventListener("submit", async (event) => {
 
 bootstrap().catch((error) => {
     console.error(error);
-    sessionHint.textContent = "Не удалось подключиться к серверу.";
+    sessionHint.textContent = "Ошибка подключения.";
 });
