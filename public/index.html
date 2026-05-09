@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidChat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="chat">
+
+    <div id="messages"></div>
+
+    <div class="bottom">
+        <input id="input" placeholder="Напиши сообщение...">
+
+        <button onclick="sendMessage()">
+            Отправить
+        </button>
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
