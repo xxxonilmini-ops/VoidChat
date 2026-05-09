@@ -20,7 +20,14 @@
                 <div class="profile-name" id="profileName">Загрузка...</div>
                 <div class="profile-row">
                     <span>ID</span>
-                    <code id="profileId">-</code>
+                    <div class="profile-inline">
+                        <code id="profileId">-</code>
+                        <button class="small-button" id="copyIdButton" type="button">Копировать</button>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>Статус</span>
+                    <span id="profileOnline">-</span>
                 </div>
                 <div class="profile-row">
                     <span>IP</span>
@@ -30,10 +37,11 @@
             </div>
 
             <form class="panel search-card" id="searchForm">
-                <label class="eyebrow" for="searchInput">Найти по ID</label>
-                <input id="searchInput" autocomplete="off" placeholder="Например VC-1A2B3C">
-                <button type="submit">Открыть чат</button>
-                <p class="helper-text" id="searchStatus">Введи ID пользователя.</p>
+                <label class="eyebrow" for="searchInput">Поиск</label>
+                <input id="searchInput" autocomplete="off" placeholder="ID или имя">
+                <button type="submit">Найти</button>
+                <p class="helper-text" id="searchStatus">Можно искать по ID и имени.</p>
+                <div class="search-results" id="searchResults"></div>
             </form>
 
             <div class="panel conversations-card">

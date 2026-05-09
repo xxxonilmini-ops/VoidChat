@@ -164,6 +164,18 @@ select:focus {
     font-weight: 700;
 }
 
+.profile-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.small-button {
+    padding: 6px 10px;
+    background: var(--panel-2);
+    color: var(--text);
+}
+
 .search-card,
 .settings-form {
     display: flex;
@@ -185,6 +197,10 @@ select:focus {
 .settings-form button:hover {
     background: var(--accent-hover);
     border-color: var(--accent-hover);
+}
+
+.small-button:hover {
+    border-color: var(--accent);
 }
 
 .ghost-button {
@@ -225,6 +241,13 @@ select:focus {
     color: var(--text);
 }
 
+.conversation-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
 .conversation-item strong,
 .conversation-item span,
 .conversation-item small {
@@ -240,9 +263,28 @@ select:focus {
     color: var(--muted);
 }
 
+.conversation-status {
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
 .conversation-item.active {
     border-color: var(--accent);
     background: rgba(59, 130, 246, 0.08);
+}
+
+.unread-badge {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .chat-panel {
@@ -298,11 +340,46 @@ select:focus {
     word-break: break-word;
 }
 
+.deleted-text {
+    color: var(--muted);
+    font-style: italic;
+}
+
 .message-meta {
     display: flex;
     justify-content: space-between;
     gap: 12px;
     font-size: 13px;
+}
+
+.message-bottom {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.edited-mark {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.message-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.message-actions button {
+    padding: 4px 8px;
+    background: transparent;
+    color: inherit;
+    border-color: currentColor;
+}
+
+.message-bubble.own .message-actions button {
+    color: #fff;
 }
 
 .message-hint {
@@ -363,6 +440,33 @@ select:focus {
 
 .log-item strong {
     color: var(--text);
+}
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-result-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    color: var(--text);
+}
+
+.search-result-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.search-result-item span,
+.search-result-item small {
+    color: var(--muted);
 }
 
 @media (max-width: 900px) {

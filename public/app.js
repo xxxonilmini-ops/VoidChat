@@ -7,6 +7,7 @@ const state = {
     conversations: [],
     activeConversationId: "",
     activeConversation: null,
+    searchResults: [],
     logs: [],
     socket: null
 };
@@ -14,10 +15,13 @@ const state = {
 const profileName = document.getElementById("profileName");
 const profileId = document.getElementById("profileId");
 const profileIp = document.getElementById("profileIp");
+const profileOnline = document.getElementById("profileOnline");
+const copyIdButton = document.getElementById("copyIdButton");
 const sessionHint = document.getElementById("sessionHint");
 const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("searchInput");
 const searchStatus = document.getElementById("searchStatus");
+const searchResults = document.getElementById("searchResults");
 const conversationList = document.getElementById("conversationList");
 const chatEmpty = document.getElementById("chatEmpty");
 const chatSection = document.getElementById("chatSection");
@@ -60,6 +64,14 @@ async function apiRequest(url, options = {}) {
     return payload;
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+}
+
 function setTheme(theme) {
     const normalized = theme === "light" ? "light" : "dark";
     document.body.classList.toggle("theme-light", normalized === "light");
@@ -67,12 +79,32 @@ function setTheme(theme) {
 }
 
 function formatTime(value) {
+    if (!value) {
+        return "-";
+    }
+
     return new Date(value).toLocaleString("ru-RU", {
         day: "2-digit",
         month: "2-digit",
         hour: "2-digit",
         minute: "2-digit"
     });
+}
+
+function formatPresence(user) {
+    if (!user) {
+        return "-";
+    }
+
+    if (user.isOnline) {
+        return "в сети";
+    }
+
+    if (!user.lastSeenAt) {
+        return "не в сети";
+    }
+
+    return `был(а) ${formatTime(user.lastSeenAt)}`;
 }
 
 function getRecoveryMessage(mode) {
@@ -95,11 +127,42 @@ function renderProfile() {
     profileName.textContent = state.user.displayName;
     profileId.textContent = state.user.publicId;
     profileIp.textContent = state.user.lastIp || "unknown";
+    profileOnline.textContent = formatPresence(state.user);
     sessionHint.textContent = getRecoveryMessage(state.recoveryMode);
 
     displayNameInput.value = state.user.displayName;
     themeSelect.value = state.user.theme;
     setTheme(state.user.theme);
+}
+
+function renderSearchResults() {
+    searchResults.innerHTML = "";
+
+    if (!state.searchResults.length) {
+        return;
+    }
+
+    state.searchResults.forEach((user) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "search-result-item";
+        button.dataset.publicId = user.publicId;
+        button.innerHTML = `
+            <div class="search-result-top">
+                <strong>${escapeHtml(user.displayName)}</strong>
+                <span>${escapeHtml(user.publicId)}</span>
+            </div>
+            <small>${escapeHtml(formatPresence(user))}</small>
+        `;
+
+        button.addEventListener("click", () => {
+            startConversation(user.publicId).catch((error) => {
+                searchStatus.textContent = error.message;
+            });
+        });
+
+        searchResults.appendChild(button);
+    });
 }
 
 function renderConversationList() {
@@ -116,12 +179,18 @@ function renderConversationList() {
     state.conversations.forEach((conversation) => {
         const button = document.createElement("button");
         const isActive = conversation.id === state.activeConversationId;
+        const unreadBadge = conversation.unreadCount > 0 ? `<span class="unread-badge">${conversation.unreadCount}</span>` : "";
+
         button.type = "button";
         button.className = `conversation-item${isActive ? " active" : ""}`;
         button.dataset.conversationId = conversation.id;
         button.innerHTML = `
-            <strong>${escapeHtml(conversation.otherUser?.displayName || "Неизвестно")}</strong>
+            <div class="conversation-head">
+                <strong>${escapeHtml(conversation.otherUser?.displayName || "Неизвестно")}</strong>
+                ${unreadBadge}
+            </div>
             <span>${escapeHtml(conversation.otherUser?.publicId || "-")}</span>
+            <span class="conversation-status">${escapeHtml(formatPresence(conversation.otherUser))}</span>
             <small>${escapeHtml(conversation.lastMessagePreview || "Сообщений пока нет.")}</small>
         `;
 
@@ -143,7 +212,7 @@ function renderMessages() {
     chatEmpty.hidden = true;
     chatSection.hidden = false;
     chatTitle.textContent = conversation.otherUser?.displayName || "Чат";
-    chatSubtitle.textContent = conversation.otherUser?.publicId || "-";
+    chatSubtitle.textContent = `${conversation.otherUser?.publicId || "-"} • ${formatPresence(conversation.otherUser)}`;
     messageList.innerHTML = "";
 
     if (!conversation.messages.length) {
@@ -155,14 +224,32 @@ function renderMessages() {
         conversation.messages.forEach((message) => {
             const item = document.createElement("article");
             const isOwn = message.senderId === state.user.id;
-            item.className = `message-bubble${isOwn ? " own" : ""}`;
+            const edited = message.editedAt && !message.isDeleted ? '<span class="edited-mark">изменено</span>' : "";
+            const actions = isOwn && !message.isDeleted
+                ? `
+                    <div class="message-actions">
+                        <button type="button" data-action="edit" data-message-id="${message.id}">Изменить</button>
+                        <button type="button" data-action="delete" data-message-id="${message.id}">Удалить</button>
+                    </div>
+                `
+                : "";
+            const text = message.isDeleted
+                ? '<p class="deleted-text">Сообщение удалено</p>'
+                : `<p>${escapeHtml(message.text)}</p>`;
+
+            item.className = `message-bubble${isOwn ? " own" : ""}${message.isDeleted ? " deleted" : ""}`;
             item.innerHTML = `
                 <div class="message-meta">
                     <strong>${escapeHtml(isOwn ? "Ты" : message.senderName)}</strong>
                     <span>${formatTime(message.createdAt)}</span>
                 </div>
-                <p>${escapeHtml(message.text)}</p>
+                ${text}
+                <div class="message-bottom">
+                    ${edited}
+                    ${actions}
+                </div>
             `;
+
             messageList.appendChild(item);
         });
     }
@@ -185,7 +272,7 @@ function renderLogs() {
         const row = document.createElement("div");
         row.className = "log-item";
         row.innerHTML = `
-            <strong>${describeLogEntry(entry)}</strong>
+            <strong>${escapeHtml(describeLogEntry(entry))}</strong>
             <span>${formatTime(entry.createdAt)}</span>
         `;
         activityLog.appendChild(row);
@@ -213,19 +300,19 @@ function describeLogEntry(entry) {
         return "Отправлено сообщение";
     }
 
+    if (entry.type === "message.edited") {
+        return "Сообщение изменено";
+    }
+
+    if (entry.type === "message.deleted") {
+        return "Сообщение удалено";
+    }
+
     if (entry.type === "profile.updated") {
         return "Обновлен профиль";
     }
 
     return entry.type;
-}
-
-function escapeHtml(value) {
-    return value
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
 }
 
 async function bootstrap() {
@@ -241,11 +328,11 @@ async function bootstrap() {
     renderConversationList();
     renderLogs();
 
+    connectSocket();
+
     if (state.conversations.length) {
         await openConversation(state.conversations[0].id, false);
     }
-
-    connectSocket();
 }
 
 async function refreshConversations() {
@@ -264,12 +351,66 @@ async function openConversation(conversationId, focusComposer = true) {
     const payload = await apiRequest(`/api/conversations/${conversationId}`);
     state.activeConversationId = conversationId;
     state.activeConversation = payload.conversation;
+
+    if (payload.conversations) {
+        state.conversations = payload.conversations;
+    }
+
     renderConversationList();
     renderMessages();
 
     if (focusComposer) {
         messageInput.focus();
     }
+}
+
+async function startConversation(publicId) {
+    const payload = await apiRequest("/api/conversations/start", {
+        method: "POST",
+        body: JSON.stringify({
+            publicId
+        })
+    });
+
+    state.conversations = payload.conversations;
+    state.searchResults = [];
+    searchResults.innerHTML = "";
+    searchInput.value = "";
+    searchStatus.textContent = payload.created ? "Чат создан." : "Чат открыт.";
+    renderConversationList();
+    await openConversation(payload.conversation.id);
+    await refreshLogs();
+}
+
+async function runSearch() {
+    const query = searchInput.value.trim();
+
+    if (!query) {
+        state.searchResults = [];
+        renderSearchResults();
+        searchStatus.textContent = "Введи ID или имя.";
+        return;
+    }
+
+    searchStatus.textContent = "Поиск...";
+
+    const payload = await apiRequest(`/api/users/search?q=${encodeURIComponent(query)}`);
+    state.searchResults = payload.users;
+    renderSearchResults();
+
+    const exactById = payload.users.find((user) => user.publicId.toUpperCase() === query.toUpperCase());
+
+    if (exactById) {
+        await startConversation(exactById.publicId);
+        return;
+    }
+
+    if (!payload.users.length) {
+        searchStatus.textContent = "Ничего не найдено.";
+        return;
+    }
+
+    searchStatus.textContent = "Выбери пользователя из списка.";
 }
 
 function connectSocket() {
@@ -283,12 +424,26 @@ function connectSocket() {
         }
     });
 
-    state.socket.on("data:changed", async (payload) => {
+    state.socket.on("connect", () => {
+        if (state.user) {
+            state.user.isOnline = true;
+            renderProfile();
+        }
+    });
+
+    state.socket.on("disconnect", () => {
+        if (state.user) {
+            state.user.isOnline = false;
+            renderProfile();
+        }
+    });
+
+    state.socket.on("data:changed", async () => {
         try {
             await Promise.all([refreshConversations(), refreshLogs()]);
 
-            if (payload.conversationId && payload.conversationId === state.activeConversationId) {
-                await openConversation(payload.conversationId, false);
+            if (state.activeConversationId) {
+                await openConversation(state.activeConversationId, false);
             }
         } catch (error) {
             console.error(error);
@@ -298,25 +453,31 @@ function connectSocket() {
 
 searchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    searchStatus.textContent = "Поиск...";
 
     try {
-        const payload = await apiRequest("/api/conversations/start", {
-            method: "POST",
-            body: JSON.stringify({
-                publicId: searchInput.value
-            })
-        });
-
-        state.conversations = payload.conversations;
-        searchInput.value = "";
-        searchStatus.textContent = payload.created ? "Чат создан." : "Чат открыт.";
-        renderConversationList();
-        await openConversation(payload.conversation.id);
-        await refreshLogs();
+        await runSearch();
     } catch (error) {
         searchStatus.textContent = error.message;
     }
+});
+
+copyIdButton.addEventListener("click", async () => {
+    if (!state.user) {
+        return;
+    }
+
+    const originalText = copyIdButton.textContent;
+
+    try {
+        await navigator.clipboard.writeText(state.user.publicId);
+        copyIdButton.textContent = "Скопировано";
+    } catch (error) {
+        copyIdButton.textContent = "Ошибка";
+    }
+
+    setTimeout(() => {
+        copyIdButton.textContent = originalText;
+    }, 1500);
 });
 
 messageForm.addEventListener("submit", async (event) => {
@@ -349,6 +510,53 @@ messageInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         messageForm.requestSubmit();
+    }
+});
+
+messageList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-action]");
+
+    if (!button) {
+        return;
+    }
+
+    const action = button.dataset.action;
+    const messageId = button.dataset.messageId;
+
+    if (!messageId) {
+        return;
+    }
+
+    try {
+        if (action === "edit") {
+            const currentMessage = state.activeConversation?.messages.find((message) => message.id === messageId);
+            const nextText = window.prompt("Измени сообщение:", currentMessage?.text || "");
+
+            if (nextText === null) {
+                return;
+            }
+
+            await apiRequest(`/api/messages/${messageId}`, {
+                method: "PUT",
+                body: JSON.stringify({ text: nextText })
+            });
+        }
+
+        if (action === "delete") {
+            const confirmed = window.confirm("Удалить сообщение?");
+
+            if (!confirmed) {
+                return;
+            }
+
+            await apiRequest(`/api/messages/${messageId}`, {
+                method: "DELETE"
+            });
+        }
+
+        await Promise.all([refreshConversations(), refreshLogs(), openConversation(state.activeConversationId, false)]);
+    } catch (error) {
+        alert(error.message);
     }
 });
 
